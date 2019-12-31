@@ -1,0 +1,35 @@
+{
+    "content_scripts": [
+        {
+            "matches": [ "<all_urls>" ],
+            "js": ["./iframe.js","./content_script.js","./picoModal-3.0.0.min.js"],
+            "all_frames": true
+        }
+    ],
+    "background": {
+        "scripts": ["./background.js"],
+        "persistent": true
+    },
+    "browser_action":{
+        "default_icon":"images/icons/32.png",
+        "default_title": "CopyPixel",
+        "default_popup":"popups/tab-not-allowed.html"
+    },
+    "web_accessible_resources": [
+        "iframe/index.html",
+        "iframe/iframe_tool.js",
+        "https://codepen.io"
+    ],
+    "content_security_policy":"script-src 'self' https://ssl.google-analytics.com https://assets.giocdn.com https://codepen.io; object-src 'self';form-action 'self' https://codepen.io; frame-src 'self' https://codepen.io",
+    "description":"copy html",
+    "icons":{
+        "128":"images/icons/128.png",
+        "16":"images/icons/16.png",
+        "48":"images/icons/48.png"
+    },
+    "name":"copy html",
+    "manifest_version":2,
+    "update_url":"http://clients2.google.com/service/update2/crx",
+    "permissions":[ "tabs", "\u003Call_urls\u003E", "unlimitedStorage","contextMenus"],
+    "version":"0.1.0"
+}
