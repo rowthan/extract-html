@@ -1,23 +1,25 @@
-appendStyle('.extract-html-active{outline:1px solid red}');
+appendStyle('.extract-html-active{outline:1px solid red;border:1px solid pink;}');
 
-// TODO 通过content转为stylesheet对象的方式，避免污染修改DOM结构
-function initStyleLink(styleSheets=slice(document.styleSheets),index=0,callback) {
-  if(index>=styleSheets.length){
-    console.log('stop',styleSheets.length);
+function initStyleLink(styleSheets=[],index=0,callback) {
+  const documentStyleSheets = document.styleSheets;
+  const currentStyleSheet = documentStyleSheets[index];
+  if(index>=documentStyleSheets.length){
     if(callback && typeof callback==='function'){
-      callback()
+      callback(styleSheets)
     }
     return
   }
-  const href = styleSheets[index].href;
-  const hasInject = document.querySelector('style[data-href="'+href+'"]');
-  if(href && hasInject==null) {
+  const href = currentStyleSheet.href;
+  // const hasInject = document.querySelector('style[data-href="'+href+'"]');
+  if(href) {
     console.log('inject',href);
     // 保证注入的顺序
-    loadStyle(href,styleSheets[index].ownerNode,function () {
+    loadStyle(href,currentStyleSheet.ownerNode,function (sheet) {
+      styleSheets.push(sheet);
       initStyleLink(styleSheets,++index,callback);
     })
   } else {
+    styleSheets.push(currentStyleSheet);
     initStyleLink(styleSheets,++index,callback);
   }
 }
@@ -28,9 +30,12 @@ function loadStyle(href,ownerNode,callback) {
   xhr.open("GET", href);
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
-      appendStyle(xhr.responseText,ownerNode,href);
+      // appendStyle(xhr.responseText,ownerNode,href);
       // ownerNode.parentNode.removeChild(ownerNode);
-      typeof callback === 'function' && callback()
+      const cssContent = xhr.responseText;
+      var styleSheet = new CSSStyleSheet();
+      styleSheet.replaceSync(cssContent);
+      typeof callback === 'function' && callback(styleSheet)
     }
   };
   try{
@@ -55,7 +60,7 @@ var lastTarget = document.body;
 document.addEventListener('mousedown',function (e) {
   if(!canExtract) return;
   lastTarget = e.target;
-  var pop = document.querySelector('.pico-content');
+  var pop = document.querySelector('#pico-content');
   if(pop && pop.contains(lastTarget)) return;
   var others = document.querySelector('.extract-html-active');
   if(others) {
@@ -146,9 +151,9 @@ function extractDom() {
   var others = document.querySelector('.extract-html-active');
   if(others) {
     others.classList.remove('extract-html-active');
-  };
-  initStyleLink(undefined,undefined,function () {
-    const cssRules = slice(document.styleSheets).reduce(function(rules, styleSheet) {
+  }
+  initStyleLink([],0,function (styleSheets) {
+    const cssRules = styleSheets.reduce(function(rules, styleSheet) {
       const rule = styleSheet.href?[]:slice(styleSheet.cssRules);
       return rules.concat(rule);
     }, []);
@@ -234,17 +239,6 @@ function extractHTML(target,cssRules) {
     }
     return css;
   }
-  //
-  // let resultCss = '';
-  //
-  // (function getCss(target,cssRules) {
-  //   if(!target) return;
-  //   const {css,leftCssRules} =getStyle(target,cssRules);
-  //   resultCss = resultCss + css;
-  //   if(target.children) {
-  //
-  //   }
-  // })(target,cssRules)
 }
 
 // for(let i=0; i<css.length; i++){

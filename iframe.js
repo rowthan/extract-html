@@ -85,7 +85,7 @@ if (window.self === window.top) {
 
     var buttons = '<section style="text-align: center"><a href="javascript:;" id="close" " style="display: inline-block;width: 15px;height: 15px;padding: 5px;background: #f3f3f3;border-radius: 15px;" ><img src="'+closeImg+'" alt="关闭" class=""></a></section>';
 
-    var iframeBody = codepen+buttons+iframScript;
+    var iframeBody = '<section id="pico-content">'+ codepen+buttons+iframScript+'</section>';
 
     doc.open();
     doc.write(iframeBody);
