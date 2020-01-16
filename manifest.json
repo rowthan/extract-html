@@ -12,8 +12,7 @@
     },
     "browser_action":{
         "default_icon":"images/icons/32.png",
-        "default_title": "CopyPixel",
-        "default_popup":"popups/tab-not-allowed.html"
+        "default_title": "打开/关闭面板"
     },
     "web_accessible_resources": [
         "iframe/index.html",
