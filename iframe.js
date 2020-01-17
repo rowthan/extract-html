@@ -43,9 +43,8 @@ if (window.self === window.top) {
       return;
     }
     var doc = iframe.contentWindow.document;
-    var style = '<style type="text/css">'+css+'</style>';
-    var script = '<script class="you-should-delete-this-element-before-use" src="'+chrome.extension.getURL("iframe/iframe_tool.js")+'"></script>';
-
+    var script = '<script src="'+chrome.extension.getURL("iframe/iframe_tool.js")+'"></script>';
+    var style = '<link rel="stylesheet" href="'+chrome.extension.getURL("iframe/iframe.css")+'">';
 
     // var htmlCode = '<pre style="width: 45%;white-space: initial;margin-right: 24px;">'+html.replace(/</g,'&#60;')+'</pre>';
     // var cssCode = '<pre style="width: 45%;white-space: initial;">'+css.replace(/</g,'&#60;')+'</pre>';
@@ -81,11 +80,11 @@ if (window.self === window.top) {
 
     var iframScript = '<script>function closeSelf() {\n' +
       'window.top.postMessage({type:\'close\'},\'*\');\n' +
-      '    };document.getElementById("close").onclick=closeSelf</script>'
+      '    };document.getElementById("close").onclick=closeSelf</script>';
 
-    var buttons = '<section style="text-align: center"><a href="javascript:;" id="close" " style="display: inline-block;width: 15px;height: 15px;padding: 5px;background: #f3f3f3;border-radius: 15px;" ><img src="'+closeImg+'" alt="关闭" class=""></a></section>';
+    var buttons = '<section class="buttons"><div class="types"><input type="radio" name="type" value="css">保证样式优先<input type="radio" name="type" value="dom">保留原始代码</div><a href="javascript:;" id="close" class="close-button" ><img src="'+closeImg+'" alt="关闭"></a></section>';
 
-    var iframeBody = '<section id="pico-content">'+ codepen+buttons+iframScript+'</section>';
+    var iframeBody = style+'<section class="extract-content">'+ codepen+buttons+iframScript+'</section>';
 
     doc.open();
     doc.write(iframeBody);

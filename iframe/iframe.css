@@ -1,0 +1,14 @@
+.types{
+    background: #fff;
+}
+.buttons{
+    text-align: center
+}
+.close-button{
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    padding: 5px;
+    background: #f3f3f3;
+    border-radius: 15px;
+}

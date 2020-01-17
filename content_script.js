@@ -80,14 +80,16 @@ let x = document.documentElement;
 HTMLElement.prototype.matchesSelector = x.webkitMatchesSelector ||
   x.mozMatchesSelector || x.oMatchesSelector || x.msMatchesSelector;
 
-const elementMatchCSSRule = function(element, cssRule) {
-  // console.log(cssRule) //.selectorText.split(":")[0]); // Testing to add hover
-  const selector = cssRule.selectorText // .replace(/:/g,''); TODO delete hover
+const elementMatchCSSRule = function(element, cssRule,ignorePseudo=true) {
+  const selectorText = cssRule.selectorText||'';
+  const selector = ignorePseudo?selectorText.replace(/::?(hover|active|focus|visited|before|after)/g,''):selectorText;
   let matched = false;
-  try{
-   matched = element.matchesSelector ? element.matchesSelector(selector) : false;
-  }catch(e){
-    console.log(e,selector,element,typeof element)
+  if(selector) {
+    try{
+      matched = element.matchesSelector ? element.matchesSelector(selector) : false;
+    }catch(e){
+      console.log(e,selector,element,typeof element)
+    }
   }
   return matched;
 };
@@ -240,14 +242,3 @@ function extractHTML(target,cssRules) {
     return css;
   }
 }
-
-// for(let i=0; i<css.length; i++){
-//   const selector = css[i].selectorText;
-//   const target = document.querySelector(selector);
-//   if(!target){
-//     useless.css.push(selector);
-//   }
-// }
-
-
-// sheet.replaceSync('#target {color: darkseagreen}');

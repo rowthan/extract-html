@@ -2,7 +2,7 @@
     "content_scripts": [
         {
             "matches": [ "<all_urls>" ],
-            "js": ["./iframe.js","./content_script.js","./picoModal-3.0.0.min.js"],
+            "js": ["./iframe.js","./content_script.js"],
             "all_frames": true
         }
     ],
@@ -16,6 +16,7 @@
     },
     "web_accessible_resources": [
         "iframe/index.html",
+        "iframe/iframe.css",
         "iframe/iframe_tool.js",
         "https://codepen.io"
     ],
