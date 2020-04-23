@@ -1,5 +1,3 @@
-appendStyle('.extract-html-active{outline:1px solid red;border:1px solid pink;}');
-
 function initStyleLink(styleSheets=[],index=0,callback) {
   const documentStyleSheets = document.styleSheets;
   const currentStyleSheet = documentStyleSheets[index];
@@ -48,7 +46,7 @@ function loadStyle(href,ownerNode,callback) {
 
 function appendStyle(content,ownerNode,href='href') {
   const style = document.createElement("style");
-  style.dataset.href=href;
+  // style.dataset.href=href;
   style.type = "text/css";
   style.appendChild(document.createTextNode(content));
   const head = document.getElementsByTagName("head")[0];
@@ -57,17 +55,60 @@ function appendStyle(content,ownerNode,href='href') {
 }
 
 var lastTarget = document.body;
-document.addEventListener('mousedown',function (e) {
-  if(!canExtract) return;
-  lastTarget = e.target;
-  var pop = document.querySelector('#pico-content');
-  if(pop && pop.contains(lastTarget)) return;
-  var others = document.querySelector('.extract-html-active');
-  if(others) {
-    others.classList.remove('extract-html-active');
+
+if(window.self===window.top) {
+  appendStyle('.extract-active{outline: 2px dashed red;outline-offset: -1px;}');
+  document.addEventListener('dblclick',function (e) {
+    if(!canExtract) return;
+    const highlight = lastTarget !== e.target;
+    lastTarget = e.target;
+    var pop = document.querySelector('#pico-content');
+    if(pop && pop.contains(lastTarget)) return;
+    setActive();
+  });
+  document.addEventListener('keydown',function (e) {
+    const code = e.keyCode;
+    const isTop = lastTarget.tagName==='BODY';
+    const parent =  isTop ? lastTarget : lastTarget.parentNode;
+    const lastTimeTarget = lastTarget;
+    switch (code) {
+      case 39:
+        lastTarget = lastTarget.children[0]||lastTarget;
+        break;
+      case 37:
+        if(isTop) return;
+        lastTarget = parent;
+        break;
+      case 40:
+        e.preventDefault();
+        if(isTop) return;
+        lastTarget = lastTarget.nextElementSibling || parent;
+        break;
+      case 38:
+        e.preventDefault();
+        if(isTop) return;
+        lastTarget = lastTarget.previousElementSibling || parent;
+        break;
+      case 13: // 回车
+        // e.preventDefault();
+        // extractDom();
+        return;
+    }
+    if(lastTarget!==lastTimeTarget){
+      setActive();
+    }
+  });
+
+  function setActive(highlight=true) {
+    var lastOne = document.querySelector('.extract-active');
+    if(lastOne) {
+      lastOne.classList.remove('extract-active');
+    }
+    if(highlight){
+      lastTarget.classList.add('extract-active');
+    }
   }
-  lastTarget.classList.add('extract-html-active')
-});
+}
 
 
 const proto = Element.prototype;
@@ -86,11 +127,12 @@ const elementMatchCSSRule = function(element, cssRule,ignorePseudo=true) {
   let matched = false;
   if(selector) {
     try{
-      matched = element.matchesSelector ? element.matchesSelector(selector) : false;
+      matched = element.matchesSelector(selector);
     }catch(e){
-      console.log(e,selector,element,typeof element)
+      console.log(e,selectorText,element,typeof element)
     }
   }
+  console.log(selectorText,matched)
   return matched;
 };
 const indentAsCSS = function(str) {
@@ -101,9 +143,7 @@ const indentAsCSS = function(str) {
 const getAppliedCSS = function(elm,cssRules,ignoreSelector=[]) {
   var elementRules = [];
   var leftCssRules = [];
-  var cnt = 0;
   cssRules.forEach((cssRule)=>{
-    cnt ++;
    if(elementMatchCSSRule(elm, cssRule) && !ignoreSelector.includes(cssRule.selectorText)) {
      elementRules.push(cssRule)
    } else {
@@ -113,7 +153,6 @@ const getAppliedCSS = function(elm,cssRules,ignoreSelector=[]) {
   return {
     elementRules: elementRules,
     leftCssRules: leftCssRules,
-    cnt: cnt,
   };
 };
 
@@ -122,18 +161,12 @@ const propertyInCSSRule = function(prop, cssRule) {
 };
 
 const getStyle = function(elm,cssRules, lookInHTML = false) {
-  var {elementRules:rules, leftCssRules,cnt} = getAppliedCSS(elm,cssRules,['.extract-html-active']);
-  console.log(cnt);
+  var {elementRules:rules, leftCssRules} = getAppliedCSS(elm,cssRules,['.extract-html-active']);
+  console.log(leftCssRules.length,'left rules');
   var str = '';
   for (var i = 0; i < rules.length; i++) {
     var r = rules[i];
-    // TODO 替换selector
-    // const className = elm.classList?elm.classList.join('.'):'.class-'+i;
-    // const selectors = r.selector.split(',');
-    // const lastSelector = selectors[selectors.length-1];
-    // const longSelector = lastSelector.trim().split(' ');
-    // const finalSelector = longSelector[longSelector.length-1];
-    // const css = r.text.replace(r.selector,finalSelector);
+    // elm.setAttribute('style',elm.getAttribute('style')+r.style.cssText);
     str += '\n' + r.cssText;
   }
 
@@ -150,80 +183,22 @@ const getStyle = function(elm,cssRules, lookInHTML = false) {
 
 var canExtract = true;
 function extractDom() {
-  var others = document.querySelector('.extract-html-active');
+  var others = document.querySelector('.extract-active');
   if(others) {
-    others.classList.remove('extract-html-active');
+    others.classList.remove('extract-active');
   }
+  lastTarget.classList.remove('extract-active');
+
   initStyleLink([],0,function (styleSheets) {
     const cssRules = styleSheets.reduce(function(rules, styleSheet) {
       const rule = styleSheet.href?[]:slice(styleSheet.cssRules);
       return rules.concat(rule);
     }, []);
-    const result = extractHTML(lastTarget,cssRules);
 
-    var codepen = '<div \n' +
-      '  class="codepen" \n' +
-      '  data-prefill \n' +
-      '  data-height="400" \n' +
-      '  data-theme-id="1"\n' +
-      '  data-default-tab="html,result" \n' +
-      '>\n' +
-      '<pre data-lang="html">'+lastTarget.outerHTML.replace(/</g,'&lt').replace(/>/g,'&gt')+'</pre>\n' +
-      '<pre data-lang="css">'+result+'</pre>\n' +
-      '</div>\n';
-
-    var formatHtml = function () {
-      alert('yes')
-    }
-
-    var data = {
-      html               : lastTarget.outerHTML,
-      css                : result,
-      // js                 : JS
-    };
-
-    var JSONstring =
-      JSON.stringify(data)
-      // Quotes will screw up the JSON
-        .replace(/"/g, "&​quot;") // careful copy and pasting, I had to use a zero-width space here to get markdown to post this.
-        .replace(/'/g, "&apos;");
-
-    var form =
-      '<form action="https://codepen.io/pen/define" method="POST" target="_blank">' +
-      '<input type="hidden" name="data" value=\'' +
-      JSONstring +
-      '\'>' +
-      '<input type="image" src="http://s.cdpn.io/3/cp-arrow-right.svg" width="40" height="40" value="无法查看？新页面打开" class="codepen-mover-button">' +
-      '</form>';
-    var buttons = '<div><button onclick="formatHtml">优化HTML</button>'+form+'</div>';
-
-
-    var content = '<section>'+codepen+buttons+'</section>';
-
-    toggleIframe(lastTarget.outerHTML,result);
-    return;
-    picoModal({
-      content: content,
-      width: 1200,
-      // overlayStyles: {
-      //   backgroundColor: "#169",
-      //   opacity: 0.75
-      // }
-    }).afterShow(function () {
-      canExtract = false;
-      var penscript = document.querySelector('script[src="https://static.codepen.io/assets/embed/ei.js"][data-href="html"]');
-
-      if(penscript && window.__CPEmbed){
-        window.__CPEmbed();
-      } else {
-        var script = document.createElement('script');
-        script.dataset.href = 'html';
-        script.src = 'https://static.codepen.io/assets/embed/ei.js';
-        document.body.appendChild(script);
-      }
-      // toggleIframe(lastTarget.outerHTML,result)
-    }).afterClose(function (modal) { modal.destroy(); canExtract = true})
-    .show();
+    const cssInline = true;
+    const extractElement = lastTarget.cloneNode(true);
+    const result = extractHTML(extractElement,cssRules);
+    toggleIframe(extractElement.outerHTML,result);
   });
 }
 
